@@ -1,0 +1,14 @@
+class Spaceship {
+  double x;
+  double y;
+
+  final double width;
+  final double height;
+
+  Spaceship({
+    required this.x,
+    required this.y,
+    this.width = 70.0,
+    this.height = 45.0,
+  });
+}
