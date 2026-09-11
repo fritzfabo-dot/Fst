@@ -33,7 +33,7 @@ class MathShooterGame {
   int score = 0;
   int highScore = 0;
   int lives = 3;
-  final int maxLives = 3;
+  int maxLives = 3;
 
   int comboCount = 0;
   int maxCombo = 0;
@@ -66,7 +66,8 @@ class MathShooterGame {
 
   void startGame() {
     score = 0;
-    lives = maxLives;
+    lives = 3;
+    maxLives = 3;
     comboCount = 0;
     maxCombo = 0;
     enemiesDestroyed = 0;
@@ -214,6 +215,30 @@ class MathShooterGame {
             maxCombo = comboCount;
           }
 
+          // Combo Life Gain: Each combo hit (comboCount >= 2) gives +1 life
+          if (comboCount >= 2) {
+            lives++;
+            if (lives > maxLives) {
+              maxLives = lives;
+            }
+
+            floatingTexts.add(
+              FloatingText(
+                x: spaceship.x,
+                y: spaceship.y - 45,
+                text: '+1 LIFE! ❤️',
+                color: const Color(0xFF00FF9D),
+              ),
+            );
+
+            createExplosion(
+              spaceship.x,
+              spaceship.y - 15,
+              const Color(0xFF00FF9D),
+              count: 14,
+            );
+          }
+
           final pointsGained = 10 * comboMultiplier;
           score += pointsGained;
 
@@ -274,7 +299,7 @@ class MathShooterGame {
     final x = minX + random.nextDouble() * (maxX - minX);
     final y = -edge;
 
-    final problem = mathSystem.generateAddition();
+    final problem = mathSystem.generateProblem();
     final difficulty = min(score / 450, 1.0);
     final enemySpeed = 1.0 + difficulty * 1.1 + random.nextDouble() * 0.45;
 

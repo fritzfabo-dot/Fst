@@ -101,35 +101,15 @@ class EnemyPainter extends CustomPainter {
 
     canvas.restore();
 
-    // 3. Math Problem Badge Tag (Crisp & High contrast)
-    final badgeBgPaint = Paint()
-      ..color = isTargeted
-          ? const Color(0xFF0F172A).withValues(alpha: 0.95)
-          : const Color(0xFF1E1B4B).withValues(alpha: 0.9)
-      ..style = PaintingStyle.fill;
-
-    final badgeBorderPaint = Paint()
-      ..color = isTargeted ? const Color(0xFF00F0FF) : const Color(0xFFA855F7)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = isTargeted ? 2.5 : 1.8;
-
-    final badgeRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: center,
-        width: size.width * 0.85,
-        height: 26,
-      ),
-      const Radius.circular(8),
-    );
-
-    canvas.drawRRect(badgeRect, badgeBgPaint);
-    canvas.drawRRect(badgeRect, badgeBorderPaint);
+    // 3. Math Problem Badge Tag (Crisp, Responsive & High contrast)
+    final expressionText = problem.expression;
+    final fontSize = expressionText.length > 7 ? 13.5 : 14.5;
 
     final textSpan = TextSpan(
-      text: problem.expression,
+      text: expressionText,
       style: TextStyle(
         color: isTargeted ? const Color(0xFF00F0FF) : Colors.white,
-        fontSize: 15,
+        fontSize: fontSize,
         fontWeight: FontWeight.w900,
         letterSpacing: 1.1,
         shadows: [
@@ -145,13 +125,47 @@ class EnemyPainter extends CustomPainter {
       text: textSpan,
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
-    )..layout(maxWidth: size.width - 4);
+      maxLines: 1,
+    )..layout();
+
+    final textWidth = textPainter.width;
+    final textHeight = textPainter.height;
+
+    const horizontalPadding = 16.0;
+    const verticalPadding = 7.0;
+
+    final minBadgeWidth = max(size.width * 0.85, 54.0);
+    final badgeWidth = max(textWidth + horizontalPadding, minBadgeWidth);
+    final badgeHeight = max(textHeight + verticalPadding, 25.0);
+
+    final badgeBgPaint = Paint()
+      ..color = isTargeted
+          ? const Color(0xFF0F172A).withValues(alpha: 0.95)
+          : const Color(0xFF1E1B4B).withValues(alpha: 0.92)
+      ..style = PaintingStyle.fill;
+
+    final badgeBorderPaint = Paint()
+      ..color = isTargeted ? const Color(0xFF00F0FF) : const Color(0xFFA855F7)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = isTargeted ? 2.5 : 1.8;
+
+    final badgeRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: center,
+        width: badgeWidth,
+        height: badgeHeight,
+      ),
+      const Radius.circular(8),
+    );
+
+    canvas.drawRRect(badgeRect, badgeBgPaint);
+    canvas.drawRRect(badgeRect, badgeBorderPaint);
 
     textPainter.paint(
       canvas,
       Offset(
-        center.dx - textPainter.width / 2,
-        center.dy - textPainter.height / 2,
+        center.dx - textWidth / 2,
+        center.dy - textHeight / 2,
       ),
     );
   }

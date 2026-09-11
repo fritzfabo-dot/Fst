@@ -17,6 +17,27 @@ class MathSystem {
     );
   }
 
+  MathProblem generateSubtraction() {
+    final left = random.nextInt(10) + 1;
+    // Ensure right <= left so that left - right >= 0 (positive integer / non-negative)
+    final right = random.nextInt(left) + 1;
+
+    return MathProblem(
+      left: left,
+      right: right,
+      operation: '-',
+      answer: left - right,
+    );
+  }
+
+  MathProblem generateProblem() {
+    if (random.nextBool()) {
+      return generateAddition();
+    } else {
+      return generateSubtraction();
+    }
+  }
+
   bool checkAnswer(
     MathProblem problem,
     String input,
