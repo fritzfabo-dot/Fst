@@ -4,9 +4,11 @@ import '../models/math_problem.dart';
 
 class EnemyPainter extends CustomPainter {
   final MathProblem problem;
+  final bool isTargeted;
 
   EnemyPainter({
     required this.problem,
+    this.isTargeted = false,
   });
 
   @override
@@ -18,14 +20,38 @@ class EnemyPainter extends CustomPainter {
 
     final radius = size.width / 2;
 
+    // Halo/Réticule de ciblage si l'ennemi est verrouillé
+    if (isTargeted) {
+      final lockPaint = Paint()
+        ..color = Colors.cyanAccent
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3;
+
+      canvas.drawCircle(
+        center,
+        radius + 4,
+        lockPaint,
+      );
+
+      final glowPaint = Paint()
+        ..color = Colors.cyanAccent.withOpacity(0.3)
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(
+        center,
+        radius + 6,
+        glowPaint,
+      );
+    }
+
     final enemyPaint = Paint()
-      ..color = Colors.deepPurpleAccent
+      ..color = isTargeted ? Colors.deepPurple : Colors.deepPurpleAccent
       ..style = PaintingStyle.fill;
 
     final borderPaint = Paint()
-      ..color = Colors.purpleAccent
+      ..color = isTargeted ? Colors.cyanAccent : Colors.purpleAccent
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
+      ..strokeWidth = isTargeted ? 4 : 3;
 
     canvas.drawCircle(
       center,
@@ -42,9 +68,9 @@ class EnemyPainter extends CustomPainter {
     final textPainter = TextPainter(
       text: TextSpan(
         text: problem.expression,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 13,
+        style: TextStyle(
+          color: isTargeted ? Colors.cyanAccent : Colors.white,
+          fontSize: 14,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -69,6 +95,6 @@ class EnemyPainter extends CustomPainter {
   bool shouldRepaint(
     covariant EnemyPainter oldDelegate,
   ) {
-    return oldDelegate.problem != problem;
+    return oldDelegate.problem != problem || oldDelegate.isTargeted != isTargeted;
   }
 }
