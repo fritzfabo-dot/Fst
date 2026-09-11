@@ -8,7 +8,7 @@ class Spaceship {
   Spaceship({
     required this.x,
     required this.y,
-    this.width = 70.0,
-    this.height = 45.0,
+    this.width = 90.0,
+    this.height = 90.0,
   });
 }

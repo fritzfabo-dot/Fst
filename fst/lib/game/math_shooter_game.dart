@@ -1,7 +1,8 @@
 import 'dart:math';
 
-import '../models/enemy.dart';
 import '../models/bullet.dart';
+import '../models/enemy.dart';
+import '../models/spaceship.dart';
 import '../systems/math_system.dart';
 
 class MathShooterGame {
@@ -11,20 +12,28 @@ class MathShooterGame {
   final List<Enemy> enemies = [];
   final List<Bullet> bullets = [];
 
+  final Spaceship spaceship = Spaceship(
+    x: 0,
+    y: 0,
+  );
+
   int score = 0;
 
-  double spaceshipX = 0;
-  double spaceshipY = 0;
-
   double enemySpawnTimer = 0;
+
+  bool? lastAnswerCorrect;
+
+  double get spaceshipX => spaceship.x;
+
+  double get spaceshipY => spaceship.y;
 
   void update({
     required double width,
     required double height,
   }) {
     // Fixed spaceship position.
-    spaceshipX = width / 2;
-    spaceshipY = height - 120;
+    spaceship.x = width / 2;
+    spaceship.y = height - 380;
 
     // Spawn enemies.
     enemySpawnTimer += 16;
@@ -36,8 +45,8 @@ class MathShooterGame {
 
     // Move enemies toward spaceship.
     for (final enemy in enemies) {
-      final dx = spaceshipX - enemy.x;
-      final dy = spaceshipY - enemy.y;
+      final dx = spaceship.x - enemy.x;
+      final dy = spaceship.y - enemy.y;
 
       final distance = sqrt(
         dx * dx + dy * dy,
@@ -112,8 +121,8 @@ class MathShooterGame {
     // Remove enemies that reach spaceship.
     enemies.removeWhere(
       (enemy) {
-        final dx = spaceshipX - enemy.x;
-        final dy = spaceshipY - enemy.y;
+        final dx = spaceship.x - enemy.x;
+        final dy = spaceship.y - enemy.y;
 
         final distance = sqrt(
           dx * dx + dy * dy,
@@ -145,15 +154,15 @@ class MathShooterGame {
 
     final problem = mathSystem.generateAddition();
 
-enemies.add(
-  Enemy(
-    x: x,
-    y: y,
-    speed: 1.2 + random.nextDouble() * 1.8,
-    size: 45 + random.nextDouble() * 20,
-    problem: problem,
-  ),
-);
+    enemies.add(
+      Enemy(
+        x: x,
+        y: y,
+        speed: 1.2 + random.nextDouble() * 1.8,
+        size: 45 + random.nextDouble() * 20,
+        problem: problem,
+      ),
+    );
   }
 
   Enemy? findNearestEnemy(
@@ -182,10 +191,27 @@ enemies.add(
     return nearest;
   }
 
+  bool validateAnswer(String input) {
+    if (input.isEmpty || enemies.isEmpty) {
+      lastAnswerCorrect = false;
+      return false;
+    }
+
+    for (final enemy in enemies) {
+      if (mathSystem.checkAnswer(enemy.problem, input)) {
+        lastAnswerCorrect = true;
+        return true;
+      }
+    }
+
+    lastAnswerCorrect = false;
+    return false;
+  }
+
   void shoot() {
     final target = findNearestEnemy(
-      spaceshipX,
-      spaceshipY,
+      spaceship.x,
+      spaceship.y,
     );
 
     if (target == null) {
@@ -194,8 +220,8 @@ enemies.add(
 
     bullets.add(
       Bullet(
-        x: spaceshipX,
-        y: spaceshipY - 40,
+        x: spaceship.x,
+        y: spaceship.y - 40,
         speed: 9.0,
         target: target,
       ),

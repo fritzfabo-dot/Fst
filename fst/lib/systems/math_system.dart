@@ -16,4 +16,17 @@ class MathSystem {
       answer: left + right,
     );
   }
+
+  bool checkAnswer(
+    MathProblem problem,
+    String input,
+  ) {
+    final value = int.tryParse(input);
+
+    if (value == null) {
+      return false;
+    }
+
+    return value == problem.answer;
+  }
 }

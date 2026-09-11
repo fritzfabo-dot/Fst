@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'game/math_shooter_game.dart';
 import 'painters/enemy_painter.dart';
 import 'painters/spaceship_painter.dart';
+import 'widgets/math_keyboard.dart';
 
 void main() {
   runApp(
@@ -26,6 +27,8 @@ class _SpaceshipGameState extends State<SpaceshipGame> {
   Timer? gameTimer;
 
   final MathShooterGame game = MathShooterGame();
+
+  String answerInput = '';
 
   @override
   void initState() {
@@ -56,10 +59,24 @@ class _SpaceshipGameState extends State<SpaceshipGame> {
     setState(() {});
   }
 
+  void onAnswerChanged(String value) {
+  setState(() {
+    answerInput = value;
+  });
+}
+
   void shoot() {
-    game.shoot();
+    final isCorrect = game.validateAnswer(
+      answerInput,
+    );
 
     setState(() {});
+
+    debugPrint(
+      isCorrect
+          ? 'CORRECT ANSWER'
+          : 'WRONG ANSWER',
+    );
   }
 
   @override
@@ -180,6 +197,16 @@ class _SpaceshipGameState extends State<SpaceshipGame> {
                   ),
                 ),
 
+                // Math keyboard attached to spaceship
+                Positioned(
+                  left: game.spaceshipX - 165,
+                  top: game.spaceshipY + 40,
+                  child: MathKeyboard(
+                    input: answerInput,
+                    onChanged: onAnswerChanged,
+                  ),
+                ),
+
                 // Shoot button
                 Positioned(
                   bottom: 25,
@@ -191,7 +218,9 @@ class _SpaceshipGameState extends State<SpaceshipGame> {
                       height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.redAccent,
+                        color: game.lastAnswerCorrect == true
+                            ? Colors.greenAccent
+                            : Colors.redAccent,
                         boxShadow: [
                           BoxShadow(
                             color: Colors.redAccent.withOpacity(0.6),
