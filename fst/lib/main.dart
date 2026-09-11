@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 
 import 'game/math_shooter_game.dart';
 import 'painters/enemy_painter.dart';
 import 'painters/particle_painter.dart';
 import 'painters/spaceship_painter.dart';
-import 'widgets/math_keyboard.dart';
+import 'painters/starfield_painter.dart';
+import 'widgets/arcade_hud.dart';
+import 'widgets/game_overlays.dart';
+import 'widgets/tactical_keyboard.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     const MaterialApp(
       debugShowCheckedModeBanner: false,
+      title: 'Spaceship+ Keyboard Shooter',
       home: SpaceshipGameWidget(),
     ),
   );
@@ -29,8 +35,9 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
   Duration _lastFrameTime = Duration.zero;
 
   final MathShooterGame game = MathShooterGame();
-  String answerInput = '';
+  final FocusNode _focusNode = FocusNode();
 
+  String answerInput = '';
   bool isFlashError = false;
 
   @override
@@ -46,9 +53,7 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
       final dt = (elapsed - _lastFrameTime).inMicroseconds / 1000000.0;
       _lastFrameTime = elapsed;
 
-      // Limiter dt pour éviter les énormes sauts de temps lors de freezes
       final clampedDt = dt.clamp(0.001, 0.05);
-
       updateGame(clampedDt);
     });
 
@@ -58,16 +63,20 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
   @override
   void dispose() {
     _ticker.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
   void updateGame(double dt) {
-    // Calculer les dimensions de l'arène de jeu (au-dessus du clavier)
+    if (!mounted) return;
     final mediaQuery = MediaQuery.of(context);
     final totalWidth = mediaQuery.size.width;
 
-    // L'arène prend toute la hauteur moins la hauteur du clavier ancré (environ 200px) et padding
-    final arenaHeight = (mediaQuery.size.height - 210).clamp(200.0, 1000.0);
+    final isCompact = mediaQuery.size.width < 380 || mediaQuery.size.height < 650;
+    final keyboardHeight = isCompact ? 205.0 : 240.0;
+    final safeAreaVertical = mediaQuery.padding.top + mediaQuery.padding.bottom;
+
+    final arenaHeight = (mediaQuery.size.height - keyboardHeight - safeAreaVertical).clamp(180.0, 1400.0);
 
     game.update(
       dt: dt,
@@ -86,12 +95,10 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
 
   void shoot() {
     if (game.status != GameStatus.playing) return;
-
     if (answerInput.isEmpty) return;
 
     final success = game.shoot(answerInput);
 
-    // Auto-reset du clavier après chaque tir
     setState(() {
       answerInput = '';
       if (!success) {
@@ -115,449 +122,220 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
       answerInput = '';
       game.startGame();
     });
+    _focusNode.requestFocus();
+  }
+
+  void _handleKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) return;
+    if (game.status != GameStatus.playing) return;
+
+    final keyLabel = event.logicalKey.keyLabel;
+
+    if (RegExp(r'^[0-9]$').hasMatch(keyLabel)) {
+      onAnswerChanged(answerInput + keyLabel);
+    } else if (event.logicalKey == LogicalKeyboardKey.backspace) {
+      if (answerInput.isNotEmpty) {
+        onAnswerChanged(answerInput.substring(0, answerInput.length - 1));
+      }
+    } else if (event.logicalKey == LogicalKeyboardKey.delete ||
+        event.logicalKey == LogicalKeyboardKey.escape) {
+      onAnswerChanged('');
+    } else if (event.logicalKey == LogicalKeyboardKey.enter ||
+        event.logicalKey == LogicalKeyboardKey.space) {
+      shoot();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final targetedEnemy = game.getTargetForInput(answerInput);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF050A18),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Arène de jeu principale
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final width = constraints.maxWidth;
-                  final height = constraints.maxHeight;
-
-                  return Stack(
-                    clipBehavior: Clip.hardEdge,
-                    children: [
-                      // Arrière-plan spatial
-                      Container(
-                        width: width,
-                        height: height,
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0xFF040814),
-                              Color(0xFF0B1228),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      // Étoiles de fond
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: CustomPaint(
-                            painter: StarFieldPainter(),
-                          ),
-                        ),
-                      ),
-
-                      // Particules d'explosion
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: CustomPaint(
-                            painter: ParticlePainter(
-                              particles: game.particles,
+    return KeyboardListener(
+      focusNode: _focusNode,
+      autofocus: true,
+      onKeyEvent: _handleKeyEvent,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF030712),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // 1. Main Space Combat Arena
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Transform.translate(
+                      offset: Offset(game.shakeX, game.shakeY),
+                      child: Stack(
+                        clipBehavior: Clip.hardEdge,
+                        children: [
+                          // Cosmic Parallax Starfield & Nebula
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: StarFieldPainter(
+                                totalTime: game.totalTime,
+                                comboMultiplier: game.comboMultiplier,
+                              ),
                             ),
                           ),
-                        ),
-                      ),
 
-                      // Ennemis
-                      ...game.enemies.map(
-                        (enemy) {
-                          final isTargeted = targetedEnemy == enemy;
-                          return Positioned(
-                            left: enemy.x - enemy.size / 2,
-                            top: enemy.y - enemy.size / 2,
-                            child: SizedBox(
-                              width: enemy.size,
-                              height: enemy.size,
+                          // Explosions & Plasma Particle Effects
+                          Positioned.fill(
+                            child: IgnorePointer(
                               child: CustomPaint(
-                                painter: EnemyPainter(
-                                  problem: enemy.problem,
-                                  isTargeted: isTargeted,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-
-                      // Projectiles
-                      ...game.bullets.map(
-                        (bullet) {
-                          return Positioned(
-                            left: bullet.x - 8,
-                            top: bullet.y - 8,
-                            child: Container(
-                              width: 16,
-                              height: 16,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.cyanAccent,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.cyanAccent.withOpacity(0.8),
-                                    blurRadius: 12,
-                                    spreadRadius: 3,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-
-                      // Vaisseau Spatial
-                      Positioned(
-                        left: game.spaceshipX - 45,
-                        top: game.spaceshipY - 45,
-                        child: SizedBox(
-                          width: 90,
-                          height: 90,
-                          child: CustomPaint(
-                            painter: SpaceshipPainter(),
-                          ),
-                        ),
-                      ),
-
-                      // Textes flottants (+10, -1 HP)
-                      ...game.floatingTexts.map((ft) {
-                        return Positioned(
-                          left: ft.x - 30,
-                          top: ft.y,
-                          child: IgnorePointer(
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 100),
-                              opacity: (ft.life / ft.maxLife).clamp(0.0, 1.0),
-                              child: Text(
-                                ft.text,
-                                style: TextStyle(
-                                  color: ft.color,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  shadows: [
-                                    Shadow(
-                                      color: ft.color.withOpacity(0.8),
-                                      blurRadius: 10,
-                                    ),
-                                  ],
+                                painter: ParticlePainter(
+                                  particles: game.particles,
                                 ),
                               ),
                             ),
                           ),
-                        );
-                      }),
 
-                      // HUD : Score & Vies (En haut de l'arène)
-                      Positioned(
-                        top: 15,
-                        left: 15,
-                        right: 15,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Compteur de Score
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.cyanAccent.withOpacity(0.3),
+                          // Alien Enemies
+                          ...game.enemies.map(
+                            (enemy) {
+                              final isTargeted = targetedEnemy == enemy;
+                              return Positioned(
+                                left: enemy.x - enemy.size / 2,
+                                top: enemy.y - enemy.size / 2,
+                                child: SizedBox(
+                                  width: enemy.size,
+                                  height: enemy.size,
+                                  child: CustomPaint(
+                                    painter: EnemyPainter(
+                                      problem: enemy.problem,
+                                      isTargeted: isTargeted,
+                                      type: enemy.type,
+                                      rotation: enemy.rotation,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              child: Text(
-                                'SCORE: ${game.score}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2,
+                              );
+                            },
+                          ),
+
+                          // Plasma Lasers & Missiles
+                          ...game.bullets.map(
+                            (bullet) {
+                              return Positioned(
+                                left: bullet.x - 7,
+                                top: bullet.y - 12,
+                                child: Container(
+                                  width: 14,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.white,
+                                        Color(0xFF00F0FF),
+                                        Color(0xFF0055FF),
+                                      ],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF00F0FF).withValues(alpha: 0.9),
+                                        blurRadius: 14,
+                                        spreadRadius: 3,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                          // Player Spaceship Interceptor
+                          Positioned(
+                            left: game.spaceshipX - 45,
+                            top: game.spaceshipY - 45,
+                            child: SizedBox(
+                              width: 90,
+                              height: 90,
+                              child: CustomPaint(
+                                painter: SpaceshipPainter(
+                                  totalTime: game.totalTime,
                                 ),
                               ),
                             ),
+                          ),
 
-                            // Vies / Boucliers
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.redAccent.withOpacity(0.3),
-                                ),
-                              ),
-                              child: Row(
-                                children: List.generate(
-                                  game.maxLives,
-                                  (index) => Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 2),
-                                    child: Icon(
-                                      index < game.lives
-                                          ? Icons.favorite
-                                          : Icons.favorite_border,
-                                      color: index < game.lives
-                                          ? Colors.redAccent
-                                          : Colors.white30,
-                                      size: 20,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Overlay Menu Principal
-                      if (game.status == GameStatus.menu)
-                        Positioned.fill(
-                          child: Container(
-                            color: Colors.black87,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.rocket_launch,
-                                  size: 80,
-                                  color: Colors.cyanAccent,
-                                ),
-                                const SizedBox(height: 20),
-                                const Text(
-                                  'FST MATH SHOOTER',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                const Text(
-                                  'Calculez vite et détruisez les envahisseurs !',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                const SizedBox(height: 40),
-                                ElevatedButton(
-                                  onPressed: startGame,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.cyanAccent,
-                                    foregroundColor: Colors.black,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 36,
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'COMMENCER LA PARTIE',
+                          // Floating Damage & Combat Score Texts
+                          ...game.floatingTexts.map((ft) {
+                            return Positioned(
+                              left: ft.x - 40,
+                              top: ft.y,
+                              child: IgnorePointer(
+                                child: AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 100),
+                                  opacity: (ft.life / ft.maxLife).clamp(0.0, 1.0),
+                                  child: Text(
+                                    ft.text,
                                     style: TextStyle(
+                                      color: ft.color,
                                       fontSize: 18,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.2,
+                                      shadows: [
+                                        Shadow(
+                                          color: ft.color.withValues(alpha: 0.8),
+                                          blurRadius: 12,
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
-                              ],
+                              ),
+                            );
+                          }),
+
+                          // Top Flight Cockpit HUD
+                          Positioned(
+                            top: 8,
+                            left: 0,
+                            right: 0,
+                            child: ArcadeHUD(
+                              score: game.score,
+                              highScore: game.highScore,
+                              lives: game.lives,
+                              maxLives: game.maxLives,
+                              comboMultiplier: game.comboMultiplier,
+                              comboCount: game.comboCount,
                             ),
                           ),
-                        ),
 
-                      // Overlay Game Over
-                      if (game.status == GameStatus.gameOver)
-                        Positioned.fill(
-                          child: Container(
-                            color: Colors.black87,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.warning_amber_rounded,
-                                  size: 80,
-                                  color: Colors.redAccent,
-                                ),
-                                const SizedBox(height: 15),
-                                const Text(
-                                  'GAME OVER',
-                                  style: TextStyle(
-                                    color: Colors.redAccent,
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 3,
-                                  ),
-                                ),
-                                const SizedBox(height: 15),
-                                Text(
-                                  'Score Final: ${game.score}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  'Meilleur Score: ${game.highScore}',
-                                  style: const TextStyle(
-                                    color: Colors.cyanAccent,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                const SizedBox(height: 35),
-                                ElevatedButton(
-                                  onPressed: startGame,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.greenAccent,
-                                    foregroundColor: Colors.black,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 40,
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'REJOUER',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                          // Start Screen Overlay
+                          if (game.status == GameStatus.menu)
+                            StartMenuOverlay(
+                              game: game,
+                              onStart: startGame,
                             ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ),
 
-            // Panneau de contrôle du Clavier Ancré en Bas (Bottom Dock)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 8,
-              ),
-              decoration: BoxDecoration(
-                color: const Color(0xFF080D1F),
-                border: Border(
-                  top: BorderSide(
-                    color: isFlashError
-                        ? Colors.redAccent
-                        : Colors.cyanAccent.withOpacity(0.3),
-                    width: 2,
-                  ),
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Clavier numérique
-                  Expanded(
-                    child: MathKeyboard(
-                      input: answerInput,
-                      onChanged: onAnswerChanged,
-                    ),
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  // Bouton de Tir
-                  GestureDetector(
-                    onTap: shoot,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      width: 72,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: isFlashError
-                            ? Colors.red
-                            : (targetedEnemy != null
-                                ? Colors.cyanAccent
-                                : Colors.cyanAccent.withOpacity(0.8)),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isFlashError
-                                ? Colors.red.withOpacity(0.8)
-                                : Colors.cyanAccent.withOpacity(0.5),
-                            blurRadius: 15,
-                            spreadRadius: 2,
-                          ),
+                          // Game Over Overlay
+                          if (game.status == GameStatus.gameOver)
+                            GameOverOverlay(
+                              game: game,
+                              onRestart: startGame,
+                            ),
                         ],
                       ),
-                      child: Center(
-                        child: Icon(
-                          Icons.flash_on,
-                          color: isFlashError ? Colors.white : Colors.black,
-                          size: 40,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+
+              // 2. Tactical Firing Console Keyboard (Bottom Panel)
+              TacticalKeyboard(
+                input: answerInput,
+                onChanged: onAnswerChanged,
+                onShoot: shoot,
+                targetedEnemy: targetedEnemy,
+                isFlashError: isFlashError,
+              ),
+            ],
+          ),
         ),
       ),
     );
-  }
-}
-
-class StarFieldPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.white.withOpacity(0.6);
-
-    final stars = [
-      const Offset(30, 80),
-      const Offset(90, 150),
-      const Offset(160, 60),
-      const Offset(230, 120),
-      const Offset(310, 45),
-      const Offset(380, 180),
-      const Offset(450, 90),
-      const Offset(520, 150),
-      const Offset(600, 70),
-      const Offset(680, 200),
-      const Offset(750, 110),
-      const Offset(820, 55),
-    ];
-
-    for (final star in stars) {
-      if (star.dx < size.width && star.dy < size.height) {
-        canvas.drawCircle(star, 1.5, paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
   }
 }

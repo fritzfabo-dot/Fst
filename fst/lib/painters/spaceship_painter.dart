@@ -1,80 +1,169 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 class SpaceshipPainter extends CustomPainter {
+  final double totalTime;
+
+  SpaceshipPainter({
+    this.totalTime = 0.0,
+  });
+
   @override
-  void paint(
-    Canvas canvas,
-    Size size,
-  ) {
-    final paint = Paint()
-      ..style = PaintingStyle.fill;
-
+  void paint(Canvas canvas, Size size) {
     final centerX = size.width / 2;
+    final centerY = size.height / 2;
 
-    // Main body
-    paint.color = Colors.blueAccent;
+    // 1. Shield Energy Aura Glow
+    final shieldPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFF00F0FF).withValues(alpha: 0.25),
+          const Color(0xFF00F0FF).withValues(alpha: 0.05),
+          Colors.transparent,
+        ],
+      ).createShader(
+        Rect.fromCircle(
+          center: Offset(centerX, centerY),
+          radius: size.width * 0.55,
+        ),
+      );
+    canvas.drawCircle(Offset(centerX, centerY), size.width * 0.55, shieldPaint);
 
-    final body = Path();
+    // 2. Animated Plasma Thruster Engine Flames
+    final flameFlicker = sin(totalTime * 30.0) * 4.0;
+    final flameHeight = 22.0 + flameFlicker;
 
-    body.moveTo(centerX, 5);
-    body.lineTo(size.width - 10, size.height - 15);
-    body.lineTo(centerX, size.height - 30);
-    body.lineTo(10, size.height - 15);
-    body.close();
+    // Left Thruster Flame
+    final leftFlamePath = Path()
+      ..moveTo(centerX - 16, size.height - 18)
+      ..lineTo(centerX - 24, size.height - 18)
+      ..lineTo(centerX - 20, size.height - 18 + flameHeight)
+      ..close();
 
-    canvas.drawPath(body, paint);
-
-    // Cockpit
-    paint.color = Colors.cyanAccent;
-
-    canvas.drawCircle(
-      Offset(centerX, size.height * 0.38),
-      13,
-      paint,
+    final flameGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        const Color(0xFF00F0FF),
+        const Color(0xFFFF0055),
+        Colors.transparent,
+      ],
     );
 
-    // Left wing
-    paint.color = Colors.blue.shade700;
+    final flamePaint = Paint()
+      ..shader = flameGradient.createShader(
+        Rect.fromLTWH(centerX - 24, size.height - 18, 8, flameHeight),
+      );
+    canvas.drawPath(leftFlamePath, flamePaint);
 
-    final leftWing = Path();
+    // Right Thruster Flame
+    final rightFlamePath = Path()
+      ..moveTo(centerX + 16, size.height - 18)
+      ..lineTo(centerX + 24, size.height - 18)
+      ..lineTo(centerX + 20, size.height - 18 + flameHeight)
+      ..close();
 
-    leftWing.moveTo(30, 55);
-    leftWing.lineTo(5, 78);
-    leftWing.lineTo(32, 72);
-    leftWing.close();
+    final rightFlamePaint = Paint()
+      ..shader = flameGradient.createShader(
+        Rect.fromLTWH(centerX + 16, size.height - 18, 8, flameHeight),
+      );
+    canvas.drawPath(rightFlamePath, rightFlamePaint);
+
+    // Core Engine Center Flame
+    final centerFlamePath = Path()
+      ..moveTo(centerX - 8, size.height - 16)
+      ..lineTo(centerX + 8, size.height - 16)
+      ..lineTo(centerX, size.height - 12 + flameHeight * 1.2)
+      ..close();
+
+    final centerFlamePaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Colors.white,
+          const Color(0xFF00F0FF),
+          Colors.transparent,
+        ],
+      ).createShader(
+        Rect.fromLTWH(centerX - 8, size.height - 16, 16, flameHeight * 1.2),
+      );
+    canvas.drawPath(centerFlamePath, centerFlamePaint);
+
+    // 3. Main Wings & Fuselage (Gradient Metallic)
+    final mainBody = Path()
+      ..moveTo(centerX, 4) // Nose tip
+      ..lineTo(size.width - 6, size.height - 20) // Right Wingtip
+      ..lineTo(size.width - 22, size.height - 28) // Right wing inner
+      ..lineTo(centerX + 12, size.height - 14) // Right tail
+      ..lineTo(centerX, size.height - 18) // Rear center indent
+      ..lineTo(centerX - 12, size.height - 14) // Left tail
+      ..lineTo(22, size.height - 28) // Left wing inner
+      ..lineTo(6, size.height - 20) // Left Wingtip
+      ..close();
+
+    final hullGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        const Color(0xFFE2E8F0),
+        const Color(0xFF1E293B),
+        const Color(0xFF0F172A),
+      ],
+    );
 
     canvas.drawPath(
-      leftWing,
-      paint,
+      mainBody,
+      Paint()..shader = hullGradient.createShader(Offset.zero & size),
     );
 
-    // Right wing
-    final rightWing = Path();
+    // Cyan Neon Hull Trim Lines
+    final trimPaint = Paint()
+      ..color = const Color(0xFF00F0FF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
 
-    rightWing.moveTo(size.width - 30, 55);
-    rightWing.lineTo(size.width - 5, 78);
-    rightWing.lineTo(size.width - 32, 72);
-    rightWing.close();
+    canvas.drawPath(mainBody, trimPaint);
+
+    // 4. Wingtip Laser Cannons
+    final cannonPaint = Paint()..color = const Color(0xFFFF0055);
+    canvas.drawRect(Rect.fromLTWH(4, size.height - 35, 4, 18), cannonPaint);
+    canvas.drawRect(Rect.fromLTWH(size.width - 8, size.height - 35, 4, 18), cannonPaint);
+
+    // 5. Cockpit Visor (Glassmorphic Glow)
+    final cockpitPath = Path()
+      ..moveTo(centerX, 20)
+      ..lineTo(centerX + 14, 45)
+      ..lineTo(centerX, 52)
+      ..lineTo(centerX - 14, 45)
+      ..close();
+
+    final cockpitGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        const Color(0xFF00F0FF),
+        const Color(0xFF0077FF),
+        const Color(0xFF001A4D),
+      ],
+    );
 
     canvas.drawPath(
-      rightWing,
-      paint,
+      cockpitPath,
+      Paint()..shader = cockpitGradient.createShader(Offset.zero & size),
     );
 
-    // Engine
-    paint.color = Colors.orangeAccent;
-
-    canvas.drawCircle(
-      Offset(centerX, size.height - 8),
-      9,
-      paint,
-    );
+    // Cockpit Glint/Highlight
+    final glintPath = Path()
+      ..moveTo(centerX - 4, 25)
+      ..lineTo(centerX + 2, 25)
+      ..lineTo(centerX - 2, 42)
+      ..close();
+    canvas.drawPath(glintPath, Paint()..color = Colors.white.withValues(alpha: 0.7));
   }
 
   @override
-  bool shouldRepaint(
-    covariant CustomPainter oldDelegate,
-  ) {
-    return false;
+  bool shouldRepaint(covariant SpaceshipPainter oldDelegate) {
+    return oldDelegate.totalTime != totalTime;
   }
 }

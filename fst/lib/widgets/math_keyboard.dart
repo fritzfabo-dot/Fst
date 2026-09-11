@@ -46,11 +46,11 @@ class MathKeyboard extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
               color: destructive
-                  ? Colors.redAccent.withOpacity(0.8)
-                  : Colors.white.withOpacity(0.10),
+                  ? Colors.redAccent.withValues(alpha: 0.8)
+                  : Colors.white.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
               ),
             ),
             child: Center(
@@ -75,15 +75,15 @@ class MathKeyboard extends StatelessWidget {
       width: 330,
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.65),
+        color: Colors.black.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.cyanAccent.withOpacity(0.35),
+          color: Colors.cyanAccent.withValues(alpha: 0.35),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.cyanAccent.withOpacity(0.12),
+            color: Colors.cyanAccent.withValues(alpha: 0.12),
             blurRadius: 15,
             spreadRadius: 2,
           ),
@@ -104,7 +104,7 @@ class MathKeyboard extends StatelessWidget {
               color: Colors.black,
               borderRadius: BorderRadius.circular(7),
               border: Border.all(
-                color: Colors.cyanAccent.withOpacity(0.4),
+                color: Colors.cyanAccent.withValues(alpha: 0.4),
               ),
             ),
             alignment: Alignment.centerRight,
