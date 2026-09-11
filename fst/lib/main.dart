@@ -90,6 +90,21 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
       height: arenaHeight,
     );
 
+    // Drain and play one-shot sound effects emitted this frame
+    for (final event in game.pendingSoundEvents) {
+      switch (event) {
+        case SoundEvent.enemyDestroyed:
+          _audio.playSfx('sound/EnemyDestroyed.mp3');
+        case SoundEvent.combo:
+          _audio.playSfx('sound/combo.wav');
+        case SoundEvent.shieldImpact:
+          _audio.playSfx('sound/shieldimpact.mp3');
+        case SoundEvent.error:
+          _audio.playSfx('sound/error.mp3');
+      }
+    }
+    game.pendingSoundEvents.clear();
+
     // Switch ambient music based on game status
     switch (game.status) {
       case GameStatus.playing:

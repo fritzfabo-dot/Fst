@@ -14,6 +14,13 @@ enum GameStatus {
   gameOver,
 }
 
+enum SoundEvent {
+  enemyDestroyed,
+  combo,
+  shieldImpact,
+  error,
+}
+
 class MathShooterGame {
   final Random random = Random();
   final MathSystem mathSystem = MathSystem();
@@ -22,6 +29,7 @@ class MathShooterGame {
   final List<Bullet> bullets = [];
   final List<Particle> particles = [];
   final List<FloatingText> floatingTexts = [];
+  final List<SoundEvent> pendingSoundEvents = [];
 
   final Spaceship spaceship = Spaceship(
     x: 0,
@@ -78,6 +86,7 @@ class MathShooterGame {
     bullets.clear();
     particles.clear();
     floatingTexts.clear();
+    pendingSoundEvents.clear();
 
     enemySpawnTimer = 0;
     shakeMagnitude = 0;
@@ -155,6 +164,7 @@ class MathShooterGame {
       lives -= 1;
       comboCount = 0;
       triggerShake(12.0);
+      pendingSoundEvents.add(SoundEvent.shieldImpact);
 
       createExplosion(enemy.x, enemy.y, const Color(0xFFFF0055), count: 20);
       floatingTexts.add(
@@ -214,6 +224,7 @@ class MathShooterGame {
           if (comboCount > maxCombo) {
             maxCombo = comboCount;
           }
+          pendingSoundEvents.add(SoundEvent.enemyDestroyed);
 
           // Combo Life Gain: Each combo hit (comboCount >= 2) gives +1 life
           if (comboCount >= 2) {
@@ -221,6 +232,7 @@ class MathShooterGame {
             if (lives > maxLives) {
               maxLives = lives;
             }
+            pendingSoundEvents.add(SoundEvent.combo);
 
             floatingTexts.add(
               FloatingText(
@@ -361,6 +373,7 @@ class MathShooterGame {
       lastAnswerCorrect = false;
       comboCount = 0;
       triggerShake(4.0);
+      pendingSoundEvents.add(SoundEvent.error);
       return false;
     }
 
