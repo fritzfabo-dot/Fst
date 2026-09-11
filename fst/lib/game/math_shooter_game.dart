@@ -144,26 +144,33 @@ class MathShooterGame {
   }
 
   void spawnEnemy(
-    double width,
-    double height,
-  ) {
-    const edge = 50.0;
+  double width,
+  double height,
+) {
+  const edge = 50.0;
 
-    final x = random.nextDouble() * width;
-    final y = -edge;
+  final x = random.nextDouble() * width;
+  final y = -edge;
 
-    final problem = mathSystem.generateAddition();
+  final problem = mathSystem.generateAddition();
 
-    enemies.add(
-      Enemy(
-        x: x,
-        y: y,
-        speed: 1.2 + random.nextDouble() * 1.8,
-        size: 45 + random.nextDouble() * 20,
-        problem: problem,
-      ),
-    );
-  }
+  final difficulty = min(score / 500, 1.0);
+
+  final enemySpeed =
+      0.5 +
+      difficulty * 0.8 +
+      random.nextDouble() * 0.3;
+
+  enemies.add(
+    Enemy(
+      x: x,
+      y: y,
+      speed: enemySpeed,
+      size: 45 + random.nextDouble() * 20,
+      problem: problem,
+    ),
+  );
+}
 
   Enemy? findNearestEnemy(
     double x,
@@ -208,23 +215,33 @@ class MathShooterGame {
     return false;
   }
 
-  void shoot() {
-    final target = findNearestEnemy(
-      spaceship.x,
-      spaceship.y,
-    );
+  void shoot(String input) {
+  final value = int.tryParse(input);
 
-    if (target == null) {
-      return;
-    }
-
-    bullets.add(
-      Bullet(
-        x: spaceship.x,
-        y: spaceship.y - 40,
-        speed: 9.0,
-        target: target,
-      ),
-    );
+  if (value == null) {
+    return;
   }
+
+  Enemy? target;
+
+  for (final enemy in enemies) {
+    if (enemy.problem.answer == value) {
+      target = enemy;
+      break;
+    }
+  }
+
+  if (target == null) {
+    return;
+  }
+
+  bullets.add(
+    Bullet(
+      x: spaceship.x,
+      y: spaceship.y - 40,
+      speed: 9.0,
+      target: target,
+    ),
+  );
+}
 }

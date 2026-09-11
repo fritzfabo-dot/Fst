@@ -60,20 +60,18 @@ class _SpaceshipGameState extends State<SpaceshipGame> {
   }
 
   void onAnswerChanged(String value) {
-  setState(() {
-    answerInput = value;
-  });
-}
+    setState(() {
+      answerInput = value;
+    });
+  }
 
   void shoot() {
-    final isCorrect = game.validateAnswer(
-      answerInput,
-    );
+    game.shoot(answerInput);
 
     setState(() {});
 
     debugPrint(
-      isCorrect
+      game.lastAnswerCorrect == true
           ? 'CORRECT ANSWER'
           : 'WRONG ANSWER',
     );
