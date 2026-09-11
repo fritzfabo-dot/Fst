@@ -11,5 +11,10 @@ class MathProblem {
     required this.answer,
   });
 
-  String get expression => '$left $operation $right';
+  String get expression {
+    if (operation == '√') {
+      return '√$right';
+    }
+    return '$left $operation $right';
+  }
 }

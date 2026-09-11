@@ -7,6 +7,7 @@ import 'painters/enemy_painter.dart';
 import 'painters/particle_painter.dart';
 import 'painters/spaceship_painter.dart';
 import 'painters/starfield_painter.dart';
+import 'services/audio_service.dart';
 import 'widgets/arcade_hud.dart';
 import 'widgets/game_overlays.dart';
 import 'widgets/tactical_keyboard.dart';
@@ -36,6 +37,7 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
 
   final MathShooterGame game = MathShooterGame();
   final FocusNode _focusNode = FocusNode();
+  final GameAudioService _audio = GameAudioService();
 
   String answerInput = '';
   bool isFlashError = false;
@@ -58,12 +60,16 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
     });
 
     _ticker.start();
+
+    // Start menu/game-over ambient music immediately
+    _audio.play(AmbientTrack.menuAndGameOver);
   }
 
   @override
   void dispose() {
     _ticker.dispose();
     _focusNode.dispose();
+    _audio.dispose();
     super.dispose();
   }
 
@@ -83,6 +89,15 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
       width: totalWidth,
       height: arenaHeight,
     );
+
+    // Switch ambient music based on game status
+    switch (game.status) {
+      case GameStatus.playing:
+        _audio.play(AmbientTrack.gameplay);
+      case GameStatus.menu:
+      case GameStatus.gameOver:
+        _audio.play(AmbientTrack.menuAndGameOver);
+    }
 
     setState(() {});
   }
