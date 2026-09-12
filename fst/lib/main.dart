@@ -7,9 +7,11 @@ import 'painters/enemy_painter.dart';
 import 'painters/particle_painter.dart';
 import 'painters/spaceship_painter.dart';
 import 'painters/starfield_painter.dart';
+import 'services/app_utils.dart';
 import 'services/audio_service.dart';
 import 'widgets/arcade_hud.dart';
 import 'widgets/game_overlays.dart';
+import 'widgets/settings_overlay.dart';
 import 'widgets/tactical_keyboard.dart';
 
 void main() {
@@ -41,6 +43,7 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
 
   String answerInput = '';
   bool isFlashError = false;
+  bool isSettingsOpen = false;
 
   @override
   void initState() {
@@ -71,6 +74,45 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
     _focusNode.dispose();
     _audio.dispose();
     super.dispose();
+  }
+
+  void openSettings() {
+    setState(() {
+      if (game.status == GameStatus.playing) {
+        game.pauseGame();
+      }
+      isSettingsOpen = true;
+    });
+  }
+
+  void closeSettings() {
+    setState(() {
+      if (game.status == GameStatus.paused) {
+        game.resumeGame();
+      }
+      isSettingsOpen = false;
+    });
+    _focusNode.requestFocus();
+  }
+
+  void toggleSettings() {
+    if (isSettingsOpen) {
+      closeSettings();
+    } else {
+      openSettings();
+    }
+  }
+
+  void toggleMusicMute() {
+    setState(() {
+      _audio.toggleMusicMute();
+    });
+  }
+
+  void toggleSfxMute() {
+    setState(() {
+      _audio.toggleSfxMute();
+    });
   }
 
   void updateGame(double dt) {
@@ -112,6 +154,9 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
       case GameStatus.menu:
       case GameStatus.gameOver:
         _audio.play(AmbientTrack.menuAndGameOver);
+      case GameStatus.paused:
+        // Keep ambient music playing while paused
+        break;
     }
 
     setState(() {});
@@ -150,6 +195,7 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
   void startGame() {
     setState(() {
       answerInput = '';
+      isSettingsOpen = false;
       game.startGame();
     });
     _focusNode.requestFocus();
@@ -157,6 +203,14 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
 
   void _handleKeyEvent(KeyEvent event) {
     if (event is! KeyDownEvent) return;
+
+    if (event.logicalKey == LogicalKeyboardKey.escape ||
+        event.logicalKey == LogicalKeyboardKey.keyP) {
+      toggleSettings();
+      return;
+    }
+
+    if (isSettingsOpen) return;
     if (game.status != GameStatus.playing) return;
 
     final keyLabel = event.logicalKey.keyLabel;
@@ -167,8 +221,7 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
       if (answerInput.isNotEmpty) {
         onAnswerChanged(answerInput.substring(0, answerInput.length - 1));
       }
-    } else if (event.logicalKey == LogicalKeyboardKey.delete ||
-        event.logicalKey == LogicalKeyboardKey.escape) {
+    } else if (event.logicalKey == LogicalKeyboardKey.delete) {
       onAnswerChanged('');
     } else if (event.logicalKey == LogicalKeyboardKey.enter ||
         event.logicalKey == LogicalKeyboardKey.space) {
@@ -331,6 +384,7 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
                               maxLives: game.maxLives,
                               comboMultiplier: game.comboMultiplier,
                               comboCount: game.comboCount,
+                              onOpenSettings: toggleSettings,
                             ),
                           ),
 
@@ -339,6 +393,7 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
                             StartMenuOverlay(
                               game: game,
                               onStart: startGame,
+                              onOpenSettings: toggleSettings,
                             ),
 
                           // Game Over Overlay
@@ -346,6 +401,19 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
                             GameOverOverlay(
                               game: game,
                               onRestart: startGame,
+                              onOpenSettings: toggleSettings,
+                              onQuit: quitGame,
+                            ),
+
+                          // Settings Modal Overlay
+                          if (isSettingsOpen)
+                            SettingsOverlay(
+                              game: game,
+                              audio: _audio,
+                              onClose: closeSettings,
+                              onToggleMusic: toggleMusicMute,
+                              onToggleSfx: toggleSfxMute,
+                              onQuit: quitGame,
                             ),
                         ],
                       ),

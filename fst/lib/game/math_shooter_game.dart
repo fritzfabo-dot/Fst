@@ -11,6 +11,7 @@ import '../systems/math_system.dart';
 enum GameStatus {
   menu,
   playing,
+  paused,
   gameOver,
 }
 
@@ -94,6 +95,18 @@ class MathShooterGame {
     shakeY = 0;
     lastAnswerCorrect = null;
     status = GameStatus.playing;
+  }
+
+  void pauseGame() {
+    if (status == GameStatus.playing) {
+      status = GameStatus.paused;
+    }
+  }
+
+  void resumeGame() {
+    if (status == GameStatus.paused) {
+      status = GameStatus.playing;
+    }
   }
 
   void triggerShake(double amount) {

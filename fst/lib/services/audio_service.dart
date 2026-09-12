@@ -12,30 +12,61 @@ class GameAudioService {
   int _sfxIndex = 0;
 
   AmbientTrack? _currentTrack;
+  bool _isMusicMuted = false;
+  bool _isSfxMuted = false;
+
+  bool get isMusicMuted => _isMusicMuted;
+  bool get isSfxMuted => _isSfxMuted;
 
   GameAudioService() {
     // Allow all players (music + SFX) to play simultaneously.
-    // Without this, each new play() call grabs exclusive audio focus,
-    // which silences any already-playing player.
-    AudioPlayer.global.setAudioContext(
-      AudioContext(
-        iOS: AudioContextIOS(
-          category: AVAudioSessionCategory.playback,
-          options: {AVAudioSessionOptions.mixWithOthers},
+    try {
+      AudioPlayer.global.setAudioContext(
+        AudioContext(
+          iOS: AudioContextIOS(
+            category: AVAudioSessionCategory.playback,
+            options: {AVAudioSessionOptions.mixWithOthers},
+          ),
+          android: const AudioContextAndroid(
+            isSpeakerphoneOn: false,
+            stayAwake: false,
+            contentType: AndroidContentType.music,
+            usageType: AndroidUsageType.game,
+            audioFocus: AndroidAudioFocus.none,
+          ),
         ),
-        android: const AudioContextAndroid(
-          isSpeakerphoneOn: false,
-          stayAwake: false,
-          contentType: AndroidContentType.music,
-          usageType: AndroidUsageType.game,
-          audioFocus: AndroidAudioFocus.none,
-        ),
-      ),
-    );
+      );
+    } catch (_) {}
 
     for (var i = 0; i < _sfxPoolSize; i++) {
       _sfxPool.add(AudioPlayer());
     }
+  }
+
+  // ── Mute Controls ──────────────────────────────────────────────────────────
+
+  Future<void> setMusicMuted(bool muted) async {
+    _isMusicMuted = muted;
+    try {
+      await _musicPlayer.setVolume(_isMusicMuted ? 0.0 : 1.0);
+      if (!_isMusicMuted && _currentTrack != null) {
+        if (_musicPlayer.state != PlayerState.playing) {
+          await _musicPlayer.resume();
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> toggleMusicMute() async {
+    await setMusicMuted(!_isMusicMuted);
+  }
+
+  void setSfxMuted(bool muted) {
+    _isSfxMuted = muted;
+  }
+
+  void toggleSfxMute() {
+    _isSfxMuted = !_isSfxMuted;
   }
 
   // ── Ambient music ──────────────────────────────────────────────────────────
@@ -49,33 +80,44 @@ class GameAudioService {
         ? 'sound/gameplay.mp3'
         : 'sound/introandgameover.mp3';
 
-    await _musicPlayer.stop();
-    await _musicPlayer.setReleaseMode(ReleaseMode.loop);
-    await _musicPlayer.play(AssetSource(asset));
+    try {
+      await _musicPlayer.stop();
+      await _musicPlayer.setVolume(_isMusicMuted ? 0.0 : 1.0);
+      await _musicPlayer.setReleaseMode(ReleaseMode.loop);
+      await _musicPlayer.play(AssetSource(asset));
+    } catch (_) {}
   }
 
   Future<void> stopMusic() async {
     _currentTrack = null;
-    await _musicPlayer.stop();
+    try {
+      await _musicPlayer.stop();
+    } catch (_) {}
   }
 
   // ── One-shot sound effects ─────────────────────────────────────────────────
 
   Future<void> playSfx(String assetPath) async {
-    // Round-robin through the pool so multiple sounds can overlap
-    final player = _sfxPool[_sfxIndex % _sfxPoolSize];
-    _sfxIndex++;
-    await player.stop();
-    await player.setReleaseMode(ReleaseMode.release);
-    await player.play(AssetSource(assetPath));
+    if (_isSfxMuted) return;
+
+    try {
+      // Round-robin through the pool so multiple sounds can overlap
+      final player = _sfxPool[_sfxIndex % _sfxPoolSize];
+      _sfxIndex++;
+      await player.stop();
+      await player.setReleaseMode(ReleaseMode.release);
+      await player.play(AssetSource(assetPath));
+    } catch (_) {}
   }
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   Future<void> dispose() async {
-    await _musicPlayer.dispose();
-    for (final p in _sfxPool) {
-      await p.dispose();
-    }
+    try {
+      await _musicPlayer.dispose();
+      for (final p in _sfxPool) {
+        await p.dispose();
+      }
+    } catch (_) {}
   }
 }

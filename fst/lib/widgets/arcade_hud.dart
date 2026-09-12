@@ -7,6 +7,7 @@ class ArcadeHUD extends StatelessWidget {
   final int maxLives;
   final int comboMultiplier;
   final int comboCount;
+  final VoidCallback? onOpenSettings;
 
   const ArcadeHUD({
     super.key,
@@ -16,6 +17,7 @@ class ArcadeHUD extends StatelessWidget {
     required this.maxLives,
     required this.comboMultiplier,
     required this.comboCount,
+    this.onOpenSettings,
   });
 
   @override
@@ -216,6 +218,42 @@ class ArcadeHUD extends StatelessWidget {
                       ),
               ),
             ),
+
+            if (onOpenSettings != null) ...[
+              const SizedBox(width: 8),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onOpenSettings,
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmallScreen ? 10 : 12,
+                      vertical: isSmallScreen ? 6 : 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.88),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: const Color(0xFF00F0FF).withValues(alpha: 0.6),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF00F0FF).withValues(alpha: 0.2),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.tune_rounded,
+                      color: const Color(0xFF00F0FF),
+                      size: isSmallScreen ? 18 : 22,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
