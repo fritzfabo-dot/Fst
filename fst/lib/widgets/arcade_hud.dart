@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../models/game_theme.dart';
+
 class ArcadeHUD extends StatelessWidget {
   final int score;
   final int highScore;
@@ -7,6 +9,7 @@ class ArcadeHUD extends StatelessWidget {
   final int maxLives;
   final int comboMultiplier;
   final int comboCount;
+  final GameTheme theme;
   final VoidCallback? onOpenSettings;
 
   const ArcadeHUD({
@@ -17,6 +20,7 @@ class ArcadeHUD extends StatelessWidget {
     required this.maxLives,
     required this.comboMultiplier,
     required this.comboCount,
+    this.theme = GameTheme.cyberpunkNeon,
     this.onOpenSettings,
   });
 
@@ -30,13 +34,13 @@ class ArcadeHUD extends StatelessWidget {
 
     final healthBorderColor = isExtraLivesActive
         ? const Color(0xFF00FF9D)
-        : (isCritical ? const Color(0xFFFF0033) : const Color(0xFFFF0055));
+        : (isCritical ? const Color(0xFFFF0033) : theme.secondaryColor);
 
     final healthGlowColor = isExtraLivesActive
         ? const Color(0xFF00FF9D).withValues(alpha: 0.45)
         : (isCritical
             ? const Color(0xFFFF0033).withValues(alpha: 0.6)
-            : const Color(0xFFFF0055).withValues(alpha: 0.25));
+            : theme.secondaryColor.withValues(alpha: 0.25));
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -56,15 +60,15 @@ class ArcadeHUD extends StatelessWidget {
                 vertical: isSmallScreen ? 6 : 8,
               ),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.88),
+                color: theme.surfaceColor.withValues(alpha: 0.88),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: const Color(0xFF00F0FF).withValues(alpha: 0.5),
+                  color: theme.primaryColor.withValues(alpha: 0.6),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF00F0FF).withValues(alpha: 0.2),
+                    color: theme.primaryColor.withValues(alpha: 0.2),
                     blurRadius: 8,
                   ),
                 ],
@@ -75,7 +79,7 @@ class ArcadeHUD extends StatelessWidget {
                   Icon(
                     Icons.stars,
                     size: isSmallScreen ? 16 : 18,
-                    color: const Color(0xFF00F0FF),
+                    color: theme.primaryColor,
                   ),
                   const SizedBox(width: 6),
                   Text(
@@ -104,13 +108,13 @@ class ArcadeHUD extends StatelessWidget {
                     vertical: isSmallScreen ? 5 : 6,
                   ),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFF0055), Color(0xFFFFB700)],
+                    gradient: LinearGradient(
+                      colors: [theme.secondaryColor, theme.accentColor],
                     ),
                     borderRadius: BorderRadius.circular(18),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFF0055).withValues(alpha: 0.5),
+                        color: theme.secondaryColor.withValues(alpha: 0.5),
                         blurRadius: 10,
                       ),
                     ],
@@ -137,7 +141,7 @@ class ArcadeHUD extends StatelessWidget {
                 vertical: isSmallScreen ? 6 : 8,
               ),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.88),
+                color: theme.surfaceColor.withValues(alpha: 0.88),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: healthBorderColor,
@@ -162,7 +166,7 @@ class ArcadeHUD extends StatelessWidget {
                             final isExtraLife = index >= 3;
                             final iconColor = isExtraLife
                                 ? const Color(0xFF00FF9D)
-                                : const Color(0xFFFF0055);
+                                : theme.secondaryColor;
 
                             return Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 2.0),
@@ -232,22 +236,22 @@ class ArcadeHUD extends StatelessWidget {
                       vertical: isSmallScreen ? 6 : 8,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0F172A).withValues(alpha: 0.88),
+                      color: theme.surfaceColor.withValues(alpha: 0.88),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: const Color(0xFF00F0FF).withValues(alpha: 0.6),
+                        color: theme.primaryColor.withValues(alpha: 0.6),
                         width: 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF00F0FF).withValues(alpha: 0.2),
+                          color: theme.primaryColor.withValues(alpha: 0.2),
                           blurRadius: 8,
                         ),
                       ],
                     ),
                     child: Icon(
                       Icons.tune_rounded,
-                      color: const Color(0xFF00F0FF),
+                      color: theme.primaryColor,
                       size: isSmallScreen ? 18 : 22,
                     ),
                   ),

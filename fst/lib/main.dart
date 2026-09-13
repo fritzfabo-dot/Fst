@@ -232,13 +232,14 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
   @override
   Widget build(BuildContext context) {
     final targetedEnemy = game.getTargetForInput(answerInput);
+    final theme = game.currentTheme;
 
     return KeyboardListener(
       focusNode: _focusNode,
       autofocus: true,
       onKeyEvent: _handleKeyEvent,
       child: Scaffold(
-        backgroundColor: const Color(0xFF030712),
+        backgroundColor: theme.backgroundColor,
         body: SafeArea(
           child: Column(
             children: [
@@ -257,6 +258,7 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
                               painter: StarFieldPainter(
                                 totalTime: game.totalTime,
                                 comboMultiplier: game.comboMultiplier,
+                                theme: theme,
                               ),
                             ),
                           ),
@@ -288,6 +290,7 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
                                       isTargeted: isTargeted,
                                       type: enemy.type,
                                       rotation: enemy.rotation,
+                                      theme: theme,
                                     ),
                                   ),
                                 ),
@@ -306,18 +309,14 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
                                   height: 24,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
-                                    gradient: const LinearGradient(
+                                    gradient: LinearGradient(
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.white,
-                                        Color(0xFF00F0FF),
-                                        Color(0xFF0055FF),
-                                      ],
+                                      colors: theme.bulletGradient,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFF00F0FF).withValues(alpha: 0.9),
+                                        color: theme.bulletGlow.withValues(alpha: 0.9),
                                         blurRadius: 14,
                                         spreadRadius: 3,
                                       ),
@@ -338,6 +337,7 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
                               child: CustomPaint(
                                 painter: SpaceshipPainter(
                                   totalTime: game.totalTime,
+                                  theme: theme,
                                 ),
                               ),
                             ),
@@ -384,6 +384,7 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
                               maxLives: game.maxLives,
                               comboMultiplier: game.comboMultiplier,
                               comboCount: game.comboCount,
+                              theme: theme,
                               onOpenSettings: toggleSettings,
                             ),
                           ),
@@ -414,6 +415,7 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
                               onToggleMusic: toggleMusicMute,
                               onToggleSfx: toggleSfxMute,
                               onQuit: quitGame,
+                              onThemeChanged: () => setState(() {}),
                             ),
                         ],
                       ),
@@ -429,6 +431,7 @@ class _SpaceshipGameWidgetState extends State<SpaceshipGameWidget>
                 onShoot: shoot,
                 targetedEnemy: targetedEnemy,
                 isFlashError: isFlashError,
+                theme: theme,
               ),
             ],
           ),

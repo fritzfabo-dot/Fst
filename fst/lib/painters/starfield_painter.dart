@@ -1,23 +1,27 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
+import '../models/game_theme.dart';
+
 class StarFieldPainter extends CustomPainter {
   final double totalTime;
   final int comboMultiplier;
+  final GameTheme theme;
 
   StarFieldPainter({
     this.totalTime = 0.0,
     this.comboMultiplier = 1,
+    this.theme = GameTheme.cyberpunkNeon,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Cosmic Nebula background glow patches
+    // 1. Cosmic Nebula background glow patches (Dynamic theme gradients)
     final nebulaPaint1 = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF9D00FF).withValues(alpha: 0.15),
-          const Color(0xFF00F0FF).withValues(alpha: 0.05),
+          theme.nebulaGradient1[0].withValues(alpha: 0.22),
+          theme.nebulaGradient1[1].withValues(alpha: 0.08),
           Colors.transparent,
         ],
       ).createShader(
@@ -31,8 +35,8 @@ class StarFieldPainter extends CustomPainter {
     final nebulaPaint2 = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFFFF0055).withValues(alpha: 0.12),
-          const Color(0xFF1A0B2E).withValues(alpha: 0.05),
+          theme.nebulaGradient2[0].withValues(alpha: 0.18),
+          theme.nebulaGradient2[1].withValues(alpha: 0.08),
           Colors.transparent,
         ],
       ).createShader(
@@ -49,10 +53,10 @@ class StarFieldPainter extends CustomPainter {
     final starLayers = [
       // Layer 1: Far, small, dim stars
       _StarLayer(count: 35, baseSize: 1.0, speed: 15.0 * starSpeedMultiplier, color: Colors.white.withValues(alpha: 0.35)),
-      // Layer 2: Medium bright stars
-      _StarLayer(count: 20, baseSize: 1.8, speed: 35.0 * starSpeedMultiplier, color: const Color(0xFF00F0FF).withValues(alpha: 0.65)),
+      // Layer 2: Medium bright stars with primary theme tint
+      _StarLayer(count: 20, baseSize: 1.8, speed: 35.0 * starSpeedMultiplier, color: theme.primaryColor.withValues(alpha: 0.7)),
       // Layer 3: Close twinkling stars with flares
-      _StarLayer(count: 10, baseSize: 2.6, speed: 60.0 * starSpeedMultiplier, color: const Color(0xFFFFE600).withValues(alpha: 0.85)),
+      _StarLayer(count: 10, baseSize: 2.6, speed: 60.0 * starSpeedMultiplier, color: theme.accentColor.withValues(alpha: 0.9)),
     ];
 
     final rand = Random(42);
@@ -87,7 +91,9 @@ class StarFieldPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant StarFieldPainter oldDelegate) {
-    return oldDelegate.totalTime != totalTime || oldDelegate.comboMultiplier != comboMultiplier;
+    return oldDelegate.totalTime != totalTime ||
+        oldDelegate.comboMultiplier != comboMultiplier ||
+        oldDelegate.theme != theme;
   }
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../game/math_shooter_game.dart';
+import '../models/game_theme.dart';
 import '../services/app_utils.dart';
 import '../services/audio_service.dart';
 
@@ -11,6 +12,7 @@ class SettingsOverlay extends StatelessWidget {
   final VoidCallback onToggleMusic;
   final VoidCallback onToggleSfx;
   final VoidCallback? onQuit;
+  final VoidCallback? onThemeChanged;
 
   const SettingsOverlay({
     super.key,
@@ -20,12 +22,14 @@ class SettingsOverlay extends StatelessWidget {
     required this.onToggleMusic,
     required this.onToggleSfx,
     this.onQuit,
+    this.onThemeChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 380 || screenSize.height < 650;
+    final theme = game.currentTheme;
 
     final dialogWidth = (screenSize.width * 0.88).clamp(280.0, 440.0);
     final outerPadding = isSmallScreen ? 12.0 : 20.0;
@@ -43,15 +47,15 @@ class SettingsOverlay extends StatelessWidget {
               width: dialogWidth,
               padding: EdgeInsets.all(innerPadding),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.96),
+                color: theme.surfaceColor.withValues(alpha: 0.96),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: const Color(0xFF00F0FF),
+                  color: theme.primaryColor,
                   width: 2.0,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF00F0FF).withValues(alpha: 0.35),
+                    color: theme.primaryColor.withValues(alpha: 0.35),
                     blurRadius: 25,
                     spreadRadius: 2,
                   ),
@@ -65,13 +69,13 @@ class SettingsOverlay extends StatelessWidget {
                     padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFF00F0FF).withValues(alpha: 0.12),
-                      border: Border.all(color: const Color(0xFF00F0FF)),
+                      color: theme.primaryColor.withValues(alpha: 0.12),
+                      border: Border.all(color: theme.primaryColor),
                     ),
                     child: Icon(
-                      Icons.tune_rounded,
+                      Icons.palette_rounded,
                       size: isSmallScreen ? 36 : 48,
-                      color: const Color(0xFF00F0FF),
+                      color: theme.primaryColor,
                     ),
                   ),
                   SizedBox(height: isSmallScreen ? 10 : 14),
@@ -82,9 +86,9 @@ class SettingsOverlay extends StatelessWidget {
                     child: Text(
                       'PARAMÈTRES DU JEU',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
-                        fontSize: isSmallScreen ? 20 : 24,
+                        fontSize: 22,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.5,
                       ),
@@ -98,26 +102,26 @@ class SettingsOverlay extends StatelessWidget {
                       margin: const EdgeInsets.only(top: 4, bottom: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFB700).withValues(alpha: 0.18),
+                        color: theme.accentColor.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: const Color(0xFFFFB700),
+                          color: theme.accentColor,
                           width: 1.2,
                         ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.pause_circle_filled_rounded,
                             size: 14,
-                            color: Color(0xFFFFB700),
+                            color: theme.accentColor,
                           ),
                           const SizedBox(width: 6),
                           Text(
                             'JEU EN PAUSE',
                             style: TextStyle(
-                              color: const Color(0xFFFFB700),
+                              color: theme.accentColor,
                               fontSize: isSmallScreen ? 10 : 12,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.2,
@@ -129,9 +133,24 @@ class SettingsOverlay extends StatelessWidget {
                   else
                     const SizedBox(height: 12),
 
-                  // Setting 1: Ambiance Music Mute (FIRST Control)
+                  // Setting 1: Theme Switcher Row
+                  _buildThemeSelectorRow(
+                    context: context,
+                    theme: theme,
+                    isSmallScreen: isSmallScreen,
+                    onNextTheme: () {
+                      final nextIndex = (game.currentThemeIndex + 1) % GameTheme.allThemes.length;
+                      game.setThemeIndex(nextIndex);
+                      if (onThemeChanged != null) onThemeChanged!();
+                    },
+                  ),
+
+                  SizedBox(height: isSmallScreen ? 10 : 14),
+
+                  // Setting 2: Ambiance Music Mute
                   _buildAudioToggleRow(
                     context: context,
+                    theme: theme,
                     title: 'MUSIQUE D\'AMBIANCE',
                     subtitle: 'Bande sonore & thèmes musicaux',
                     icon: audio.isMusicMuted
@@ -144,9 +163,10 @@ class SettingsOverlay extends StatelessWidget {
 
                   SizedBox(height: isSmallScreen ? 10 : 14),
 
-                  // Setting 2: Sound Effects Mute (SECOND Control)
+                  // Setting 3: Sound Effects Mute
                   _buildAudioToggleRow(
                     context: context,
+                    theme: theme,
                     title: 'EFFETS SONORES',
                     subtitle: 'Bruitages de tir, explosions & impacts',
                     icon: audio.isSfxMuted
@@ -163,7 +183,7 @@ class SettingsOverlay extends StatelessWidget {
                   ElevatedButton(
                     onPressed: onClose,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00F0FF),
+                      backgroundColor: theme.primaryColor,
                       foregroundColor: Colors.black,
                       minimumSize: Size(double.infinity, isSmallScreen ? 46 : 52),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -202,9 +222,9 @@ class SettingsOverlay extends StatelessWidget {
                   OutlinedButton(
                     onPressed: onQuit ?? quitGame,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFFF0055),
+                      foregroundColor: theme.secondaryColor,
                       side: BorderSide(
-                        color: const Color(0xFFFF0055).withValues(alpha: 0.6),
+                        color: theme.secondaryColor.withValues(alpha: 0.6),
                         width: 1.5,
                       ),
                       minimumSize: Size(double.infinity, isSmallScreen ? 42 : 48),
@@ -212,7 +232,7 @@ class SettingsOverlay extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      backgroundColor: const Color(0xFF030712).withValues(alpha: 0.8),
+                      backgroundColor: theme.backgroundColor.withValues(alpha: 0.8),
                     ),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
@@ -243,8 +263,112 @@ class SettingsOverlay extends StatelessWidget {
     );
   }
 
+  Widget _buildThemeSelectorRow({
+    required BuildContext context,
+    required GameTheme theme,
+    required bool isSmallScreen,
+    required VoidCallback onNextTheme,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onNextTheme,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 12 : 16,
+            vertical: isSmallScreen ? 10 : 12,
+          ),
+          decoration: BoxDecoration(
+            color: theme.backgroundColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: theme.primaryColor.withValues(alpha: 0.5),
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(isSmallScreen ? 8 : 10),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.primaryColor.withValues(alpha: 0.15),
+                ),
+                child: Icon(
+                  Icons.auto_awesome,
+                  color: theme.primaryColor,
+                  size: isSmallScreen ? 20 : 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'THÈME GRAPHIQUE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isSmallScreen ? 12 : 14,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      theme.name.toUpperCase(),
+                      style: TextStyle(
+                        color: theme.primaryColor,
+                        fontSize: isSmallScreen ? 10 : 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: theme.primaryColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: theme.primaryColor, width: 1.2),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'CHANGER',
+                      style: TextStyle(
+                        color: theme.primaryColor,
+                        fontSize: isSmallScreen ? 10 : 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: theme.primaryColor,
+                      size: 10,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAudioToggleRow({
     required BuildContext context,
+    required GameTheme theme,
     required String title,
     required String subtitle,
     required IconData icon,
@@ -252,8 +376,8 @@ class SettingsOverlay extends StatelessWidget {
     required VoidCallback onToggle,
     required bool isSmallScreen,
   }) {
-    final activeColor = const Color(0xFF00F0FF);
-    final inactiveColor = const Color(0xFFFF0055);
+    final activeColor = theme.primaryColor;
+    final inactiveColor = theme.secondaryColor;
 
     return Material(
       color: Colors.transparent,
@@ -266,7 +390,7 @@ class SettingsOverlay extends StatelessWidget {
             vertical: isSmallScreen ? 10 : 12,
           ),
           decoration: BoxDecoration(
-            color: const Color(0xFF030712),
+            color: theme.backgroundColor,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isMuted ? inactiveColor.withValues(alpha: 0.5) : activeColor.withValues(alpha: 0.5),
@@ -275,7 +399,6 @@ class SettingsOverlay extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Icon Container
               Container(
                 padding: EdgeInsets.all(isSmallScreen ? 8 : 10),
                 decoration: BoxDecoration(
@@ -290,7 +413,6 @@ class SettingsOverlay extends StatelessWidget {
               ),
               const SizedBox(width: 12),
 
-              // Titles
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,9 +429,9 @@ class SettingsOverlay extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white54,
-                        fontSize: isSmallScreen ? 9 : 11,
+                        fontSize: 10,
                       ),
                     ),
                   ],
@@ -317,7 +439,6 @@ class SettingsOverlay extends StatelessWidget {
               ),
               const SizedBox(width: 8),
 
-              // Toggle Switch Button
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

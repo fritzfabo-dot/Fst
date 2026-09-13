@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/enemy.dart';
+import '../models/game_theme.dart';
 
 class TacticalKeyboard extends StatefulWidget {
   const TacticalKeyboard({
@@ -10,6 +11,7 @@ class TacticalKeyboard extends StatefulWidget {
     required this.onShoot,
     required this.targetedEnemy,
     this.isFlashError = false,
+    this.theme = GameTheme.cyberpunkNeon,
   });
 
   final String input;
@@ -17,6 +19,7 @@ class TacticalKeyboard extends StatefulWidget {
   final VoidCallback onShoot;
   final Enemy? targetedEnemy;
   final bool isFlashError;
+  final GameTheme theme;
 
   @override
   State<TacticalKeyboard> createState() => _TacticalKeyboardState();
@@ -60,6 +63,7 @@ class _TacticalKeyboardState extends State<TacticalKeyboard> {
     final screenSize = MediaQuery.of(context).size;
     final isCompact = screenSize.width < 380 || screenSize.height < 650;
     final hasTarget = widget.targetedEnemy != null;
+    final theme = widget.theme;
 
     final fireButtonWidth = isCompact ? 76.0 : 92.0;
     final fireButtonHeight = isCompact ? 128.0 : 144.0;
@@ -74,19 +78,19 @@ class _TacticalKeyboardState extends State<TacticalKeyboard> {
       ),
       padding: EdgeInsets.all(isCompact ? 6 : 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF0B1021).withValues(alpha: 0.94),
+        color: theme.cardColor.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(isCompact ? 16 : 20),
         border: Border.all(
           color: widget.isFlashError
-              ? const Color(0xFFFF0055)
-              : (hasTarget ? const Color(0xFF00F0FF) : const Color(0xFF3B82F6).withValues(alpha: 0.4)),
+              ? theme.secondaryColor
+              : (hasTarget ? theme.primaryColor : theme.keyboardBorder.withValues(alpha: 0.4)),
           width: 2.0,
         ),
         boxShadow: [
           BoxShadow(
             color: widget.isFlashError
-                ? const Color(0xFFFF0055).withValues(alpha: 0.4)
-                : (hasTarget ? const Color(0xFF00F0FF).withValues(alpha: 0.25) : Colors.black54),
+                ? theme.secondaryColor.withValues(alpha: 0.4)
+                : (hasTarget ? theme.primaryColor.withValues(alpha: 0.25) : Colors.black54),
             blurRadius: 18,
             spreadRadius: 1,
           ),
@@ -102,16 +106,16 @@ class _TacticalKeyboardState extends State<TacticalKeyboard> {
             margin: EdgeInsets.only(bottom: isCompact ? 6 : 8),
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFF030712),
+              color: theme.backgroundColor,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: hasTarget ? const Color(0xFF00F0FF) : const Color(0xFF1E293B),
+                color: hasTarget ? theme.primaryColor : theme.surfaceColor,
                 width: 1.5,
               ),
               boxShadow: [
                 if (hasTarget)
                   BoxShadow(
-                    color: const Color(0xFF00F0FF).withValues(alpha: 0.2),
+                    color: theme.primaryColor.withValues(alpha: 0.2),
                     blurRadius: 8,
                   ),
               ],
@@ -124,11 +128,11 @@ class _TacticalKeyboardState extends State<TacticalKeyboard> {
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
                       color: hasTarget
-                          ? const Color(0xFF00F0FF).withValues(alpha: 0.15)
-                          : const Color(0xFF1E293B),
+                          ? theme.primaryColor.withValues(alpha: 0.15)
+                          : theme.surfaceColor,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                        color: hasTarget ? const Color(0xFF00F0FF) : Colors.white24,
+                        color: hasTarget ? theme.primaryColor : Colors.white24,
                       ),
                     ),
                     child: Row(
@@ -137,7 +141,7 @@ class _TacticalKeyboardState extends State<TacticalKeyboard> {
                         Icon(
                           hasTarget ? Icons.gps_fixed : Icons.radar,
                           size: 13,
-                          color: hasTarget ? const Color(0xFF00F0FF) : Colors.white54,
+                          color: hasTarget ? theme.primaryColor : Colors.white54,
                         ),
                         const SizedBox(width: 4),
                         Flexible(
@@ -149,7 +153,7 @@ class _TacticalKeyboardState extends State<TacticalKeyboard> {
                                   ? 'CIBLE: ${widget.targetedEnemy!.problem.expression}'
                                   : (widget.input.isNotEmpty ? 'RECHERCHE...' : 'CIBLE EN ATTENTE'),
                               style: TextStyle(
-                                color: hasTarget ? const Color(0xFF00F0FF) : Colors.white60,
+                                color: hasTarget ? theme.primaryColor : Colors.white60,
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.6,
@@ -170,14 +174,14 @@ class _TacticalKeyboardState extends State<TacticalKeyboard> {
                     widget.input.isEmpty ? '0' : widget.input,
                     style: TextStyle(
                       color: widget.isFlashError
-                          ? const Color(0xFFFF0055)
-                          : (hasTarget ? const Color(0xFF00F0FF) : Colors.white),
+                          ? theme.secondaryColor
+                          : (hasTarget ? theme.primaryColor : Colors.white),
                       fontSize: isCompact ? 20 : 24,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 2,
                       shadows: [
                         Shadow(
-                          color: hasTarget ? const Color(0xFF00F0FF) : const Color(0xFF3B82F6),
+                          color: hasTarget ? theme.primaryColor : theme.keyboardBorder,
                           blurRadius: 8,
                         ),
                       ],
@@ -227,7 +231,7 @@ class _TacticalKeyboardState extends State<TacticalKeyboard> {
                           label: '⌫ EFFACER',
                           onTap: _onBackspace,
                           isPressed: pressedKey == 'BACK',
-                          color: const Color(0xFF3B82F6),
+                          color: theme.keyboardBorder,
                           flex: 2,
                           height: keyHeight,
                         ),
@@ -235,7 +239,7 @@ class _TacticalKeyboardState extends State<TacticalKeyboard> {
                           label: 'C RESET',
                           onTap: _onClear,
                           isPressed: pressedKey == 'CLEAR',
-                          color: const Color(0xFFFF0055),
+                          color: theme.secondaryColor,
                           flex: 1,
                           height: keyHeight,
                         ),
@@ -259,23 +263,23 @@ class _TacticalKeyboardState extends State<TacticalKeyboard> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: widget.isFlashError
-                          ? [const Color(0xFFFF0055), const Color(0xFF990033)]
+                          ? [theme.secondaryColor, theme.secondaryColor.withValues(alpha: 0.6)]
                           : (hasTarget
-                              ? [const Color(0xFF00F0FF), const Color(0xFF006699)]
-                              : [const Color(0xFF1E293B), const Color(0xFF0F172A)]),
+                              ? [theme.primaryColor, theme.primaryColor.withValues(alpha: 0.6)]
+                              : [theme.surfaceColor, theme.backgroundColor]),
                     ),
                     borderRadius: BorderRadius.circular(isCompact ? 12 : 16),
                     border: Border.all(
                       color: widget.isFlashError
-                          ? const Color(0xFFFF0055)
-                          : (hasTarget ? Colors.white : const Color(0xFF334155)),
+                          ? theme.secondaryColor
+                          : (hasTarget ? Colors.white : theme.surfaceColor),
                       width: 2.0,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: widget.isFlashError
-                            ? const Color(0xFFFF0055).withValues(alpha: 0.6)
-                            : (hasTarget ? const Color(0xFF00F0FF).withValues(alpha: 0.6) : Colors.transparent),
+                            ? theme.secondaryColor.withValues(alpha: 0.6)
+                            : (hasTarget ? theme.primaryColor.withValues(alpha: 0.6) : Colors.transparent),
                         blurRadius: 14,
                         spreadRadius: 1,
                       ),
@@ -337,7 +341,7 @@ class _TacticalKeyboardState extends State<TacticalKeyboard> {
     Color? color,
     int flex = 1,
   }) {
-    final keyColor = color ?? const Color(0xFF1E293B);
+    final keyColor = color ?? widget.theme.surfaceColor;
 
     return Expanded(
       flex: flex,
@@ -366,7 +370,7 @@ class _TacticalKeyboardState extends State<TacticalKeyboard> {
                 boxShadow: [
                   if (isPressed)
                     BoxShadow(
-                      color: (color ?? const Color(0xFF00F0FF)).withValues(alpha: 0.5),
+                      color: (color ?? widget.theme.primaryColor).withValues(alpha: 0.5),
                       blurRadius: 6,
                     ),
                 ],

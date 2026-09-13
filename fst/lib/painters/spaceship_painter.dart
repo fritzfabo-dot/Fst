@@ -1,11 +1,15 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
+import '../models/game_theme.dart';
+
 class SpaceshipPainter extends CustomPainter {
   final double totalTime;
+  final GameTheme theme;
 
   SpaceshipPainter({
     this.totalTime = 0.0,
+    this.theme = GameTheme.cyberpunkNeon,
   });
 
   @override
@@ -17,8 +21,8 @@ class SpaceshipPainter extends CustomPainter {
     final shieldPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF00F0FF).withValues(alpha: 0.25),
-          const Color(0xFF00F0FF).withValues(alpha: 0.05),
+          theme.primaryColor.withValues(alpha: 0.28),
+          theme.primaryColor.withValues(alpha: 0.05),
           Colors.transparent,
         ],
       ).createShader(
@@ -44,8 +48,8 @@ class SpaceshipPainter extends CustomPainter {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-        const Color(0xFF00F0FF),
-        const Color(0xFFFF0055),
+        theme.primaryColor,
+        theme.secondaryColor,
         Colors.transparent,
       ],
     );
@@ -82,7 +86,7 @@ class SpaceshipPainter extends CustomPainter {
         end: Alignment.bottomCenter,
         colors: [
           Colors.white,
-          const Color(0xFF00F0FF),
+          theme.primaryColor,
           Colors.transparent,
         ],
       ).createShader(
@@ -105,11 +109,7 @@ class SpaceshipPainter extends CustomPainter {
     final hullGradient = LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
-      colors: [
-        const Color(0xFFE2E8F0),
-        const Color(0xFF1E293B),
-        const Color(0xFF0F172A),
-      ],
+      colors: theme.shipHullGradient,
     );
 
     canvas.drawPath(
@@ -117,16 +117,16 @@ class SpaceshipPainter extends CustomPainter {
       Paint()..shader = hullGradient.createShader(Offset.zero & size),
     );
 
-    // Cyan Neon Hull Trim Lines
+    // Neon Hull Trim Lines
     final trimPaint = Paint()
-      ..color = const Color(0xFF00F0FF)
+      ..color = theme.shipTrimColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
     canvas.drawPath(mainBody, trimPaint);
 
     // 4. Wingtip Laser Cannons
-    final cannonPaint = Paint()..color = const Color(0xFFFF0055);
+    final cannonPaint = Paint()..color = theme.secondaryColor;
     canvas.drawRect(Rect.fromLTWH(4, size.height - 35, 4, 18), cannonPaint);
     canvas.drawRect(Rect.fromLTWH(size.width - 8, size.height - 35, 4, 18), cannonPaint);
 
@@ -141,11 +141,7 @@ class SpaceshipPainter extends CustomPainter {
     final cockpitGradient = LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
-      colors: [
-        const Color(0xFF00F0FF),
-        const Color(0xFF0077FF),
-        const Color(0xFF001A4D),
-      ],
+      colors: theme.cockpitGradient,
     );
 
     canvas.drawPath(
@@ -164,6 +160,6 @@ class SpaceshipPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant SpaceshipPainter oldDelegate) {
-    return oldDelegate.totalTime != totalTime;
+    return oldDelegate.totalTime != totalTime || oldDelegate.theme != theme;
   }
 }

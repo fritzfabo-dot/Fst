@@ -19,6 +19,7 @@ class StartMenuOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 380 || screenSize.height < 650;
+    final theme = game.currentTheme;
 
     final dialogWidth = (screenSize.width * 0.88).clamp(260.0, 420.0);
     final outerPadding = isSmallScreen ? 12.0 : 20.0;
@@ -34,15 +35,15 @@ class StartMenuOverlay extends StatelessWidget {
               width: dialogWidth,
               padding: EdgeInsets.all(innerPadding),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+                color: theme.surfaceColor.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: const Color(0xFF00F0FF),
+                  color: theme.primaryColor,
                   width: 2.0,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF00F0FF).withValues(alpha: 0.35),
+                    color: theme.primaryColor.withValues(alpha: 0.35),
                     blurRadius: 25,
                     spreadRadius: 2,
                   ),
@@ -56,7 +57,7 @@ class StartMenuOverlay extends StatelessWidget {
                       right: 0,
                       child: IconButton(
                         onPressed: onOpenSettings,
-                        icon: const Icon(Icons.tune_rounded, color: Color(0xFF00F0FF)),
+                        icon: Icon(Icons.tune_rounded, color: theme.primaryColor),
                         tooltip: 'Paramètres',
                       ),
                     ),
@@ -68,13 +69,13 @@ class StartMenuOverlay extends StatelessWidget {
                         padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: const Color(0xFF00F0FF).withValues(alpha: 0.12),
-                          border: Border.all(color: const Color(0xFF00F0FF)),
+                          color: theme.primaryColor.withValues(alpha: 0.12),
+                          border: Border.all(color: theme.primaryColor),
                         ),
                         child: Icon(
                           Icons.rocket_launch,
                           size: isSmallScreen ? 42 : 56,
-                          color: const Color(0xFF00F0FF),
+                          color: theme.primaryColor,
                         ),
                       ),
                       SizedBox(height: isSmallScreen ? 12 : 18),
@@ -101,7 +102,7 @@ class StartMenuOverlay extends StatelessWidget {
                           'TACTICAL MATH ARCADE SHOOTER',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: const Color(0xFF00F0FF),
+                            color: theme.primaryColor,
                             fontSize: isSmallScreen ? 10 : 11,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.5,
@@ -114,16 +115,16 @@ class StartMenuOverlay extends StatelessWidget {
                       Container(
                         padding: EdgeInsets.all(isSmallScreen ? 10 : 14),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF030712),
+                          color: theme.backgroundColor,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.white12),
                         ),
                         child: Text(
                           'Saisissez le résultat exact des équations pour verrouiller les vaisseaux ennemis et tirez avec le canon plasma !',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white70,
-                            fontSize: isSmallScreen ? 11 : 13,
+                            fontSize: 12,
                             height: 1.35,
                           ),
                         ),
@@ -136,7 +137,7 @@ class StartMenuOverlay extends StatelessWidget {
                           child: Text(
                             'RECORD PERSONNEL: ${game.highScore} PTS',
                             style: TextStyle(
-                              color: const Color(0xFFFFB700),
+                              color: theme.accentColor,
                               fontSize: isSmallScreen ? 12 : 14,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.1,
@@ -150,7 +151,7 @@ class StartMenuOverlay extends StatelessWidget {
                       ElevatedButton(
                         onPressed: onStart,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00F0FF),
+                          backgroundColor: theme.primaryColor,
                           foregroundColor: Colors.black,
                           minimumSize: Size(double.infinity, isSmallScreen ? 46 : 52),
                           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -209,6 +210,7 @@ class GameOverOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 380 || screenSize.height < 650;
+    final theme = game.currentTheme;
 
     final dialogWidth = (screenSize.width * 0.88).clamp(260.0, 420.0);
     final outerPadding = isSmallScreen ? 12.0 : 20.0;
@@ -224,15 +226,15 @@ class GameOverOverlay extends StatelessWidget {
               width: dialogWidth,
               padding: EdgeInsets.all(innerPadding),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+                color: theme.surfaceColor.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: const Color(0xFFFF0055),
+                  color: theme.secondaryColor,
                   width: 2.0,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF0055).withValues(alpha: 0.35),
+                    color: theme.secondaryColor.withValues(alpha: 0.35),
                     blurRadius: 25,
                     spreadRadius: 2,
                   ),
@@ -246,7 +248,7 @@ class GameOverOverlay extends StatelessWidget {
                       right: 0,
                       child: IconButton(
                         onPressed: onOpenSettings,
-                        icon: const Icon(Icons.tune_rounded, color: Color(0xFFFF0055)),
+                        icon: Icon(Icons.tune_rounded, color: theme.secondaryColor),
                         tooltip: 'Paramètres',
                       ),
                     ),
@@ -256,7 +258,7 @@ class GameOverOverlay extends StatelessWidget {
                       Icon(
                         Icons.report_problem_rounded,
                         size: isSmallScreen ? 46 : 56,
-                        color: const Color(0xFFFF0055),
+                        color: theme.secondaryColor,
                       ),
                       SizedBox(height: isSmallScreen ? 8 : 12),
 
@@ -266,7 +268,7 @@ class GameOverOverlay extends StatelessWidget {
                           'MISSION ÉCHOUÉE',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: const Color(0xFFFF0055),
+                            color: theme.secondaryColor,
                             fontSize: isSmallScreen ? 22 : 26,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 2.0,
@@ -277,11 +279,11 @@ class GameOverOverlay extends StatelessWidget {
 
                       FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text(
+                        child: const Text(
                           'BOUCLIERS DU VAISSEAU ÉPUISÉS',
                           style: TextStyle(
                             color: Colors.white54,
-                            fontSize: isSmallScreen ? 10 : 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.2,
                           ),
@@ -293,17 +295,17 @@ class GameOverOverlay extends StatelessWidget {
                       Container(
                         padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF030712),
+                          color: theme.backgroundColor,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: Colors.white12),
                         ),
                         child: Column(
                           children: [
-                            _buildStatRow('SCORE FINAL', '${game.score}', const Color(0xFF00F0FF), isSmallScreen),
+                            _buildStatRow('SCORE FINAL', '${game.score}', theme.primaryColor, isSmallScreen),
                             Divider(color: Colors.white12, height: isSmallScreen ? 12 : 16),
-                            _buildStatRow('MEILLEUR SCORE', '${game.highScore}', const Color(0xFFFFB700), isSmallScreen),
+                            _buildStatRow('MEILLEUR SCORE', '${game.highScore}', theme.accentColor, isSmallScreen),
                             Divider(color: Colors.white12, height: isSmallScreen ? 12 : 16),
-                            _buildStatRow('MAX COMBO', 'x${game.maxCombo}', const Color(0xFFFF0055), isSmallScreen),
+                            _buildStatRow('MAX COMBO', 'x${game.maxCombo}', theme.secondaryColor, isSmallScreen),
                             Divider(color: Colors.white12, height: isSmallScreen ? 12 : 16),
                             _buildStatRow('PRÉCISION', '${game.accuracy.toStringAsFixed(0)}%', Colors.white, isSmallScreen),
                           ],
@@ -314,7 +316,7 @@ class GameOverOverlay extends StatelessWidget {
                       ElevatedButton(
                         onPressed: onRestart,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF0055),
+                          backgroundColor: theme.secondaryColor,
                           foregroundColor: Colors.white,
                           minimumSize: Size(double.infinity, isSmallScreen ? 46 : 52),
                           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -348,9 +350,9 @@ class GameOverOverlay extends StatelessWidget {
                       OutlinedButton(
                         onPressed: onQuit ?? quitGame,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFFFF0055),
+                          foregroundColor: theme.secondaryColor,
                           side: BorderSide(
-                            color: const Color(0xFFFF0055).withValues(alpha: 0.6),
+                            color: theme.secondaryColor.withValues(alpha: 0.6),
                             width: 1.5,
                           ),
                           minimumSize: Size(double.infinity, isSmallScreen ? 42 : 48),
@@ -358,7 +360,7 @@ class GameOverOverlay extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          backgroundColor: const Color(0xFF030712).withValues(alpha: 0.8),
+                          backgroundColor: theme.backgroundColor.withValues(alpha: 0.8),
                         ),
                         child: FittedBox(
                           fit: BoxFit.scaleDown,

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../models/enemy.dart';
+import '../models/game_theme.dart';
 import '../models/math_problem.dart';
 
 class EnemyPainter extends CustomPainter {
@@ -9,12 +10,14 @@ class EnemyPainter extends CustomPainter {
   final bool isTargeted;
   final EnemyType type;
   final double rotation;
+  final GameTheme theme;
 
   EnemyPainter({
     required this.problem,
     this.isTargeted = false,
     this.type = EnemyType.drone,
     this.rotation = 0.0,
+    this.theme = GameTheme.cyberpunkNeon,
   });
 
   @override
@@ -24,7 +27,7 @@ class EnemyPainter extends CustomPainter {
 
     // 1. Target Lock Reticle (if locked on by player's keyboard input)
     if (isTargeted) {
-      final lockColor = const Color(0xFF00F0FF);
+      final lockColor = theme.primaryColor;
 
       // Lock aura glow
       final lockGlowPaint = Paint()
@@ -108,13 +111,13 @@ class EnemyPainter extends CustomPainter {
     final textSpan = TextSpan(
       text: expressionText,
       style: TextStyle(
-        color: isTargeted ? const Color(0xFF00F0FF) : Colors.white,
+        color: isTargeted ? theme.primaryColor : Colors.white,
         fontSize: fontSize,
         fontWeight: FontWeight.w900,
         letterSpacing: 1.1,
         shadows: [
           Shadow(
-            color: isTargeted ? const Color(0xFF00F0FF) : const Color(0xFFA855F7),
+            color: isTargeted ? theme.primaryColor : theme.secondaryColor,
             blurRadius: 8,
           ),
         ],
@@ -140,12 +143,12 @@ class EnemyPainter extends CustomPainter {
 
     final badgeBgPaint = Paint()
       ..color = isTargeted
-          ? const Color(0xFF0F172A).withValues(alpha: 0.95)
-          : const Color(0xFF1E1B4B).withValues(alpha: 0.92)
+          ? theme.surfaceColor.withValues(alpha: 0.95)
+          : theme.cardColor.withValues(alpha: 0.92)
       ..style = PaintingStyle.fill;
 
     final badgeBorderPaint = Paint()
-      ..color = isTargeted ? const Color(0xFF00F0FF) : const Color(0xFFA855F7)
+      ..color = isTargeted ? theme.primaryColor : theme.secondaryColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = isTargeted ? 2.5 : 1.8;
 
@@ -174,9 +177,9 @@ class EnemyPainter extends CustomPainter {
     // Bio-Mechanical Sphere Drone
     final orbGradient = RadialGradient(
       colors: [
-        const Color(0xFFFF0055),
-        const Color(0xFF9D00FF),
-        const Color(0xFF2E1065),
+        theme.secondaryColor,
+        theme.secondaryColor.withValues(alpha: 0.7),
+        const Color(0xFF1E1035),
       ],
     );
 
@@ -188,7 +191,7 @@ class EnemyPainter extends CustomPainter {
 
     // Orbital Shield ring
     final ringPaint = Paint()
-      ..color = const Color(0xFFFF0055).withValues(alpha: 0.7)
+      ..color = theme.secondaryColor.withValues(alpha: 0.7)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
@@ -214,9 +217,9 @@ class EnemyPainter extends CustomPainter {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-        const Color(0xFFEC4899),
-        const Color(0xFF8B5CF6),
-        const Color(0xFF312E81),
+        theme.primaryColor,
+        theme.secondaryColor,
+        const Color(0xFF1E1B4B),
       ],
     );
 
@@ -228,7 +231,7 @@ class EnemyPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = const Color(0xFFF472B6)
+        ..color = theme.primaryColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0,
     );
@@ -252,9 +255,9 @@ class EnemyPainter extends CustomPainter {
 
     final dreadGradient = RadialGradient(
       colors: [
-        const Color(0xFFF59E0B),
-        const Color(0xFFD97706),
-        const Color(0xFF78350F),
+        theme.accentColor,
+        theme.secondaryColor,
+        const Color(0xFF3E1B00),
       ],
     );
 
@@ -266,7 +269,7 @@ class EnemyPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = const Color(0xFFFBBF24)
+        ..color = theme.accentColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.5,
     );
@@ -277,6 +280,7 @@ class EnemyPainter extends CustomPainter {
     return oldDelegate.problem != problem ||
         oldDelegate.isTargeted != isTargeted ||
         oldDelegate.type != type ||
-        oldDelegate.rotation != rotation;
+        oldDelegate.rotation != rotation ||
+        oldDelegate.theme != theme;
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/bullet.dart';
 import '../models/enemy.dart';
 import '../models/floating_text.dart';
+import '../models/game_theme.dart';
 import '../models/particle.dart';
 import '../models/spaceship.dart';
 import '../systems/math_system.dart';
@@ -58,6 +59,9 @@ class MathShooterGame {
   double enemySpawnTimer = 0;
   bool? lastAnswerCorrect;
 
+  int currentThemeIndex = 0;
+  GameTheme currentTheme = GameTheme.cyberpunkNeon;
+
   double get spaceshipX => spaceship.x;
   double get spaceshipY => spaceship.y;
 
@@ -71,6 +75,23 @@ class MathShooterGame {
   double get accuracy {
     if (shotsFired == 0) return 100.0;
     return (shotsHit / shotsFired * 100.0).clamp(0.0, 100.0);
+  }
+
+  void randomizeTheme() {
+    if (GameTheme.allThemes.length <= 1) return;
+    int nextIndex;
+    do {
+      nextIndex = random.nextInt(GameTheme.allThemes.length);
+    } while (nextIndex == currentThemeIndex);
+    currentThemeIndex = nextIndex;
+    currentTheme = GameTheme.allThemes[currentThemeIndex];
+  }
+
+  void setThemeIndex(int index) {
+    if (index >= 0 && index < GameTheme.allThemes.length) {
+      currentThemeIndex = index;
+      currentTheme = GameTheme.allThemes[currentThemeIndex];
+    }
   }
 
   void startGame() {
@@ -95,6 +116,17 @@ class MathShooterGame {
     shakeY = 0;
     lastAnswerCorrect = null;
     status = GameStatus.playing;
+
+    randomizeTheme();
+
+    floatingTexts.add(
+      FloatingText(
+        x: spaceship.x,
+        y: spaceship.y - 80,
+        text: 'THÈME: ${currentTheme.name.toUpperCase()}!',
+        color: currentTheme.primaryColor,
+      ),
+    );
   }
 
   void pauseGame() {
